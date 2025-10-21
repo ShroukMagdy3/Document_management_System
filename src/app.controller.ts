@@ -6,9 +6,10 @@ import express, { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
-import { checkConnection, checkSync } from "./DB/connectionDb";
+import { checkConnection, checkMongo, checkSync } from "./DB/connectionDb";
 import { AppError } from "./utilities/classError";
 import userRouter from "./module/users/user.controller";
+import workspaceRouter from "./module/workspace/workspace.controller";
 
 const app: express.Application = express();
 const port: string | number = process.env.PORT || 5000;
@@ -30,15 +31,21 @@ const bootstrap = async () => {
 
   await checkConnection();
   await checkSync()
+  await checkMongo()
+  
 
   app.use("/api/v1/users" , userRouter);
+  app.use("/api/v1/workspaces" , workspaceRouter);
+
+
+
   app.get("/", (req: Request, res: Response, next: NextFunction) => {
     return res
       .status(200)
       .json({ message: "welcome to Document Management system" });
   });
   app.use("{/*demo}", (req: Request, res: Response, next: NextFunction) => {
-    throw new AppError(` not found URL ,Invalid URL ${req.originalUrl}`, 404);
+    throw new AppError(`URL not found ,Invalid URL ${req.originalUrl}`, 404);
   });
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     return res

@@ -12,3 +12,15 @@ export const generateToken = async ({
 }): Promise<string> => {
   return jwt.sign(payload, signature, options);
 };
+
+
+
+export const verifyToken = async ({
+  token,
+  signature,
+}: {
+  token: string;
+  signature: string;
+}): Promise<JwtPayload> => {
+  return jwt.verify(token, signature) as JwtPayload;
+};
