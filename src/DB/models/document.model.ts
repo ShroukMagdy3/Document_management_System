@@ -12,6 +12,10 @@ export interface IDocument extends Document {
   name: string;
   ownerNID: string;
   type: string;
+  deletedBy:string;
+  deletedAt:Date
+  restoreAt:Date;
+  restoreBy:string
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,9 +46,23 @@ const DocumentSchema = new mongoose.Schema<IDocument>(
       public_url: String,
       secure_url: String
     }
-  ]
-  },
-  {
+  ],
+   deletedAt: {
+      type: Date,
+    },
+    deletedBy :{
+      type:String,
+      maxLength:14,
+      minlength:14
+    },
+    restoreAt:{
+       type: Date,
+    },
+    restoreBy:{
+      type:String
+    }
+  }
+  ,{
     timestamps: true,
   }
 );

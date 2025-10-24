@@ -1,6 +1,7 @@
 import {
   downloadSchemaType,
   fileSchema,
+  freezeSchemaType,
   uploadFileSchema,
 } from "./document.validation";
 import { workspaceModel } from "./../../DB/models/workspace.model";
@@ -64,32 +65,143 @@ export const downloadFile = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { DocumentId  , workspaceId ,fileId}  = req.params as downloadSchemaType ;
+  const { DocumentId, workspaceId, fileId } = req.params as downloadSchemaType;
 
-  if(!DocumentId){
-    throw new AppError("File ID is required" ,404)
+  if (!DocumentId) {
+    throw new AppError("File ID is required", 404);
   }
-  const workspace = await workspaceModel.findOne({_id:workspaceId});
-  if(!workspace){
-    throw new AppError("workspace not found" , 404)
-  }
-
-  const doc = await DocumentModel.findOne({_id:DocumentId})
-  if(!doc){
-    throw new AppError("there this no document" , 404)
+  const workspace = await workspaceModel.findOne({ _id: workspaceId });
+  if (!workspace) {
+    throw new AppError("workspace not found", 404);
   }
 
-  const attachment = doc.attachments.find((att)=>{
-    return att._id.toString() === fileId
-  })
-   if (!attachment || !attachment.public_url) {
-      return res.status(404).json({ message: "Attachment URL not found" });
+  const doc = await DocumentModel.findOne({
+    _id: DocumentId,
+    deletedAt: { $exists: false },
+  });
+  if (!doc) {
+    throw new AppError("there this no document", 404);
+  }
+
+  const attachment = doc.attachments.find((att) => {
+    return att._id.toString() === fileId;
+  });
+  if (!attachment || !attachment.public_url) {
+    return res.status(404).json({ message: "Attachment URL not found" });
+  }
+  const fileUrl = attachment.secure_url;
+  const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
+
+  res.setHeader("Content-Disposition", `attachment;"`);
+  res.setHeader("Content-Type", response.headers["content-type"]);
+  return res.send(response.data);
+};
+
+export const getAllDoc = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId } = req.params;
+  if (!workspaceId) {
+    throw new AppError("workspace ID is required", 400);
+  }
+  const workspace = await workspaceModel.findOne({
+    _id: workspaceId,
+    userNID: req.user.nid,
+  });
+  if (!workspace) {
+    throw new AppError("Workspace not found or you are unauthorized", 404);
+  }
+
+  const docs = await DocumentModel.find({
+    workspaceId,
+    ownerNID: req.user.nid,
+    deletedBy: { $exists: false },
+  });
+  if (!docs.length) {
+    return res
+      .status(404)
+      .json({ message: "No documents found", attachments: [] });
+  }
+  const allAttachments: string[] = [];
+
+  for (const doc of docs) {
+    for (const att of doc.attachments) {
+      allAttachments.push(att.secure_url);
     }
-    const fileUrl = attachment.secure_url;
-    const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
+  }
 
+  return res
+    .status(200)
+    .json({ message: "Success", attachments: allAttachments });
+};
 
-    res.setHeader("Content-Disposition", `attachment;"`);
-    res.setHeader("Content-Type", response.headers["content-type"]);
-    return res.send(response.data)
+export const freezeDoc = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId, docId } = req.params as freezeSchemaType;
+  
+  const workspace = await workspaceModel.findOne({ _id: workspaceId ,userNID: req.user.nid,
+  });
+  console.log(workspace);
+  
+  if (!workspace) {
+    console.log(req.user.nid);
+    throw new AppError("this workspace not found or you are unauthorized", 404);
+  }
+  const doc = await DocumentModel.findOneAndUpdate(
+    {
+      _id: docId,
+      ownerNID: req.user.nid,
+      workspaceId,
+      deletedBy: { $exists: false },
+    },
+    {
+      deletedAt: Date.now(),
+      deletedBy: req.user.nid,
+    }
+  );
+  if (!doc) {
+    throw new AppError("this Doc not found or already freezed", 404);
+  }
+
+  return res.status(200).json({ message: "freezed" });
+};
+
+export const unfreezeDoc = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId, docId } = req.params as freezeSchemaType;
+  const workspace = await workspaceModel.findOne({
+    _id: workspaceId,
+    userNID: req.user.nid,
+  });
+  if (!workspace) {
+    throw new AppError("this workspace not found or you are unauthorized", 404);
+  }
+  const doc = await DocumentModel.findOneAndUpdate(
+    {
+      _id: docId,
+      ownerNID: req.user.nid,
+      workspaceId,
+      deletedBy: { $exists: true },
+    },
+    {
+      $unset: { deletedAt: "", deletedBy: "" },
+      $set: {
+        restoreAt: Date.now(),
+        restoreBy: req.user.nid,
+      },
+    }
+  );
+
+  if (!doc) {
+    throw new AppError("this Doc not found or already unfreeze", 404);
+  }
+  return res.status(200).json({ message: "unfreeze" });
 };

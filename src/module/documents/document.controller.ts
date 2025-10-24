@@ -1,6 +1,12 @@
 import { Router } from "express";
 import { MulterCloud } from "../../middleware/multer";
-import { downloadFile, uploadFiles } from "./document.service";
+import {
+  downloadFile,
+  freezeDoc,
+  getAllDoc,
+  unfreezeDoc,
+  uploadFiles,
+} from "./document.service";
 import { validationFileType } from "../../middleware/multer";
 import { Authentication, tokenEnum } from "../../middleware/authentication";
 import asyncHandler from "express-async-handler";
@@ -8,6 +14,7 @@ import { validation } from "../../middleware/validation";
 import {
   downloadSchema,
   fileSchema,
+  freezeSchema,
   uploadFileSchema,
 } from "./document.validation";
 
@@ -38,6 +45,20 @@ documentRouter.get(
   Authentication(tokenEnum.access),
   validation({ params: downloadSchema }),
   downloadFile
+);
+
+documentRouter.get("/getAll", Authentication(tokenEnum.access), getAllDoc);
+documentRouter.patch(
+  "/freeze/:docId",
+  Authentication(tokenEnum.access),
+  validation({ params: freezeSchema }),
+  freezeDoc
+);
+documentRouter.patch(
+  "/unfreeze/:docId",
+  Authentication(tokenEnum.access),
+  validation({ params: freezeSchema }),
+  unfreezeDoc
 );
 
 export default documentRouter;
