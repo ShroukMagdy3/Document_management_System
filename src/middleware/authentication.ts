@@ -38,7 +38,6 @@ export const Authentication = (tokenType: tokenEnum) => {
     if (!decode) {
       throw new AppError("invalid token", 400);
     }
-    console.log(decode);
 
     const user = await User.findOne({
       where: {
@@ -59,10 +58,7 @@ export const Authentication = (tokenType: tokenEnum) => {
     
     req.user = user;
     req.decode =decode;
-    
-    console.log(req.user);
-    console.log(req.decode);
-   
+
     return next();
   };
 };
