@@ -8,10 +8,6 @@ const userRouter = Router()
 
 userRouter.post("/signUp" , validation({body:signUpSchema}) ,US.signUp )
 userRouter.post("/confirmEmail" , validation({body:confirmEmailSchema}) ,US.confirmEmail )
-userRouter.post("/signIn" , validation({body:signInSchema}) ,US.signIn )
-
-
-
-
+userRouter.post("/signIn" , validation({body:signInSchema}) ,US.signIn );
 
 export default userRouter;

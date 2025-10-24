@@ -13,12 +13,12 @@ export interface IUser {
   email: string;
   password: string;
   nid: string;
-  phone?: string;
-  role?: RoleEnum;
+  phone?: string | undefined;
+  role?: RoleEnum | undefined;
   otp: string;
-  confirmed?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  confirmed?: boolean | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }
 export interface IUserModel extends Model<IUser>, IUser {}
 

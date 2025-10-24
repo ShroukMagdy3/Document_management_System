@@ -1,4 +1,5 @@
 import { Sequelize } from "sequelize";
+import mongoose from "mongoose";
 
 export const sequelize = new Sequelize(process.env.DB_NAME! , "root", "", {
   host: "localhost",
@@ -16,8 +17,18 @@ export const checkConnection = async () => {
     });
 };
 
+export const checkMongo = async ()=>{
+  await mongoose.connect(process.env.LINK_MONGO!).then(()=>{
+    console.log("connection to mongo is success");
+  }).catch((err)=>{
+    console.log("error in connection to DB");
+    
+  })
+}
+
+
 export const checkSync = ()=>{
-  sequelize.sync({ alter: true }).then(() => {
+  sequelize.sync({ force: false }).then(() => {
   console.log('Database synced');
 }).catch((error)=>{
   console.log("synced error" , error);
