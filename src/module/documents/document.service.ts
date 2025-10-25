@@ -203,3 +203,38 @@ export const unfreezeDoc = async (
   }
   return res.status(200).json({ message: "unfreeze" });
 };
+export const preview = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+ const {docId , workspaceId}  = req.params as freezeSchemaType;
+
+    const document = await DocumentModel.findOne({_id:docId});
+    if (!document){
+      return res.status(404).json({ message: "Document not found" });
+    } 
+
+    const doc =await DocumentModel.findOne({_id:docId , ownerNID:req.user.nid ,workspaceId })
+    if (!doc) {
+      return res.status(403).json({ message: "unauthorized" });
+    }
+
+    const fileUrl = doc?.attachments[0]!.secure_url; 
+    if(!fileUrl){
+      throw new AppError("url not found" , 404)
+    }
+
+  
+    const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
+    const base64Data = Buffer.from(response.data, "binary").toString("base64");
+
+
+    res.status(200).json({
+      base64Data: base64Data,
+    });
+};
+
+
+
+
