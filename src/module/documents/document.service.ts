@@ -124,13 +124,11 @@ export const getAllDoc = async (
       .status(404)
       .json({ message: "No documents found", attachments: [] });
   }
-  const allAttachments: string[] = [];
-
-  for (const doc of docs) {
-    for (const att of doc.attachments) {
-      allAttachments.push(att.secure_url);
-    }
-  }
+  
+  const allAttachments = docs.reduce<string[]>((acc, current)=>{
+    acc.push(...current.attachments.map((c)=>{ return c.secure_url }))
+    return acc
+  } , [])
 
   return res
     .status(200)
