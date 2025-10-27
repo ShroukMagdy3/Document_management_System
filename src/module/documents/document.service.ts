@@ -2,6 +2,7 @@ import {
   downloadSchemaType,
   fileSchema,
   freezeSchemaType,
+  searchSchemaType,
   uploadFileSchema,
 } from "./document.validation";
 import { workspaceModel } from "./../../DB/models/workspace.model";
@@ -124,11 +125,15 @@ export const getAllDoc = async (
       .status(404)
       .json({ message: "No documents found", attachments: [] });
   }
-  
-  const allAttachments = docs.reduce<string[]>((acc, current)=>{
-    acc.push(...current.attachments.map((c)=>{ return c.secure_url }))
-    return acc
-  } , [])
+
+  const allAttachments = docs.reduce<string[]>((acc, current) => {
+    acc.push(
+      ...current.attachments.map((c) => {
+        return c.secure_url;
+      })
+    );
+    return acc;
+  }, []);
 
   return res
     .status(200)
@@ -141,11 +146,13 @@ export const freezeDoc = async (
   next: NextFunction
 ) => {
   const { workspaceId, docId } = req.params as freezeSchemaType;
-  
-  const workspace = await workspaceModel.findOne({ _id: workspaceId ,userNID: req.user.nid,
+
+  const workspace = await workspaceModel.findOne({
+    _id: workspaceId,
+    userNID: req.user.nid,
   });
   console.log(workspace);
-  
+
   if (!workspace) {
     console.log(req.user.nid);
     throw new AppError("this workspace not found or you are unauthorized", 404);
@@ -208,33 +215,86 @@ export const preview = async (
   res: Response,
   next: NextFunction
 ) => {
- const {docId , workspaceId}  = req.params as freezeSchemaType;
+  const { docId, workspaceId } = req.params as freezeSchemaType;
 
-    const document = await DocumentModel.findOne({_id:docId});
-    if (!document){
-      return res.status(404).json({ message: "Document not found" });
-    } 
+  const document = await DocumentModel.findOne({ _id: docId });
+  if (!document) {
+    return res.status(404).json({ message: "Document not found" });
+  }
 
-    const doc =await DocumentModel.findOne({_id:docId , ownerNID:req.user.nid ,workspaceId })
-    if (!doc) {
-      return res.status(403).json({ message: "unauthorized" });
-    }
+  const doc = await DocumentModel.findOne({
+    _id: docId,
+    ownerNID: req.user.nid,
+    workspaceId,
+  });
+  if (!doc) {
+    return res.status(403).json({ message: "unauthorized" });
+  }
 
-    const fileUrl = doc?.attachments[0]!.secure_url; 
-    if(!fileUrl){
-      throw new AppError("url not found" , 404)
-    }
+  const fileUrl = doc?.attachments[0]!.secure_url;
+  if (!fileUrl) {
+    throw new AppError("url not found", 404);
+  }
 
-  
-    const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
-    const base64Data = Buffer.from(response.data, "binary").toString("base64");
+  const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
+  const base64Data = Buffer.from(response.data, "binary").toString("base64");
 
-
-    res.status(200).json({
-      base64Data: base64Data,
-    });
+  res.status(200).json({
+    base64Data: base64Data,
+  });
 };
 
+export const listDoc = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { workspaceId } = req.params;
+  const workspace = await workspaceModel.findOne({
+    _id: workspaceId,
+    userNID: req.user.nid,
+  });
+  if (!workspace) {
+    throw new AppError("there is no workspace or you are unauthorized", 404);
+  }
+  const docs = await DocumentModel.find({
+    ownerNID: req.user.nid,
+    workspaceId,
+  });
+  if (docs.length === 0) {
+    throw new AppError("there are no docs for you", 404);
+  }
+  return res.status(200).json({ message: "success", docs });
+};
 
+export const searchAndSort = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { name , type  , sort = "createdAt" , order = "desc" } = req.query as searchSchemaType;
+  const { workspaceId } = req.params;
+  if (!name && !type) {
+    throw new AppError("you must provide name or type for search", 400);
+  }
+  let filter : any = {ownerNID:req.user.nid , workspaceId} ;
+ if(name){
+   filter.name={$regex:name , $options:"i"}
+ }
+ if(type) {
+  filter.type = {$regex :type , $options :"i"}
+  }
+  const doc = await DocumentModel.find(filter).sort({ [sort] :  order === "desc" ? -1 : 1 })
+
+  if (!doc) {
+    throw new AppError("No documents for you or you are un authorized! ", 400);
+  }
+  if (doc.length === 0) {
+    throw new AppError("there is no documents for you", 400);
+  }
+
+
+  return res.status(200).json({ message: "success", doc });
+};
 
 

@@ -4,7 +4,9 @@ import {
   downloadFile,
   freezeDoc,
   getAllDoc,
+  listDoc,
   preview,
+  searchAndSort,
   unfreezeDoc,
   uploadFiles,
 } from "./document.service";
@@ -16,6 +18,7 @@ import {
   downloadSchema,
   fileSchema,
   freezeSchema,
+  searchSchema,
   uploadFileSchema,
 } from "./document.validation";
 
@@ -64,5 +67,10 @@ documentRouter.patch(
 
 
 documentRouter.get("/preview/:docId" ,Authentication(tokenEnum.access) , validation({ params: freezeSchema }) ,preview )
+documentRouter.get("/listDoc" ,Authentication(tokenEnum.access) ,listDoc )
+documentRouter.get("/search" ,Authentication(tokenEnum.access),validation({query:searchSchema }) ,searchAndSort )
+
+
+
 
 export default documentRouter;

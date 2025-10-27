@@ -42,6 +42,14 @@ export const freezeSchema =z.strictObject({
   }, { message: "Invalid workspace id" }) ,
 })
 
+export const searchSchema = z.strictObject({
+  name:z.string().optional(),
+  type:z.string().optional(),
+  sort:z.string().optional(),
+  order:z.string().optional(),
+})
+
 
 export type downloadSchemaType = z.infer<typeof downloadSchema >
 export type freezeSchemaType = z.infer<typeof freezeSchema >
+export type searchSchemaType = z.infer<typeof searchSchema >
