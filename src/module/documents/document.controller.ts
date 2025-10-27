@@ -4,10 +4,12 @@ import {
   downloadFile,
   freezeDoc,
   getAllDoc,
+  getDoc,
   listDoc,
   preview,
   searchAndSort,
   unfreezeDoc,
+  updateDoc,
   uploadFiles,
 } from "./document.service";
 import { validationFileType } from "../../middleware/multer";
@@ -19,6 +21,8 @@ import {
   fileSchema,
   freezeSchema,
   searchSchema,
+  updateDocSchema,
+  updateDocSchemaParams,
   uploadFileSchema,
 } from "./document.validation";
 
@@ -64,12 +68,11 @@ documentRouter.patch(
   validation({ params: freezeSchema }),
   unfreezeDoc
 );
-
-
 documentRouter.get("/preview/:docId" ,Authentication(tokenEnum.access) , validation({ params: freezeSchema }) ,preview )
 documentRouter.get("/listDoc" ,Authentication(tokenEnum.access) ,listDoc )
 documentRouter.get("/search" ,Authentication(tokenEnum.access),validation({query:searchSchema }) ,searchAndSort )
-
+documentRouter.get("/metadata/:docId" , Authentication(tokenEnum.access), validation({ params: freezeSchema }) , getDoc)
+documentRouter.patch("/update/:docId" , Authentication(tokenEnum.access), validation({ params: updateDocSchemaParams }) , validation({body:updateDocSchema}) , updateDoc)
 
 
 

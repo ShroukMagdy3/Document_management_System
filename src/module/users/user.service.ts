@@ -59,7 +59,7 @@ export const signIn = async (req: Request, res: Response, next: NextFunction) =>
           ? process.env.SIGNATURE_access_USER!
           : process.env.SIGNATURE_access_ADMIN!,
       options: {
-        expiresIn: 60 * 60,
+        expiresIn: "1d",
         jwtid: jwtId,
       },
     });
