@@ -6,13 +6,14 @@ export enum WorkspaceCategoryEnum {
   internship = "internship",
   company = "company",
   personal = "personal",
+  other ="other"
 }
 
 export interface IWorkspace extends Document{
     userNID: string;         
   name: string;             
   description?: string;
-  category?: string;
+  category?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,11 +34,11 @@ const workspaceSchema = new mongoose.Schema<IWorkspace>({
         minlength:3 ,
         maxlength:200
     },
-    category:{
+    category:[{
         type:String,
-        enum:WorkspaceCategoryEnum,
+        enum:Object.keys(WorkspaceCategoryEnum),
         required:true
-    }
+    }]
 
 
 } ,{

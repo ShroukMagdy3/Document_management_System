@@ -5,8 +5,11 @@ import { Authorization } from "../../middleware/authorization";
 import { RoleEnum } from "../../DB/models/users.model";
 import { validation } from "../../middleware/validation";
 import { createWorkSpaceSchema, updateSchema } from "./workspace.validation";
+import documentRouter from "../documents/document.controller";
+import { MulterCloud, validationFileType } from "../../middleware/multer";
 
 const workspaceRouter = Router();
+workspaceRouter.use("/:workspaceId/documents" , documentRouter)
 
 
 workspaceRouter.post( "/createWorkspace" , Authentication(tokenEnum.access) , validation({body: createWorkSpaceSchema}), WS.createWorkspace )

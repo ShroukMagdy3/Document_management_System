@@ -10,6 +10,8 @@ import { checkConnection, checkMongo, checkSync } from "./DB/connectionDb";
 import { AppError } from "./utilities/classError";
 import userRouter from "./module/users/user.controller";
 import workspaceRouter from "./module/workspace/workspace.controller";
+import "./utilities/merging";
+
 
 const app: express.Application = express();
 const port: string | number = process.env.PORT || 5000;

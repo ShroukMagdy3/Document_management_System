@@ -97,10 +97,9 @@ export const updateWorkspace = async (
   if (!id) {
     throw new AppError("workspaceID is required");
   }
-  const userNID = req.user.nid;
  const workspace = await workspaceModel.findOne({
     _id: id,        
-    userNID: userNID, 
+    userNID: req.user.nid, 
   });
   if (!workspace) {
     throw new AppError("this workspace not found or you are unauthorized");
@@ -113,7 +112,11 @@ export const updateWorkspace = async (
   }
 
   if(category){
-    workspace.category = category
+    const updatedWorkspace = await workspaceModel.findByIdAndUpdate(
+  id,
+  { $addToSet: { category } }, 
+  { new: true} 
+);
   }
   await workspace.save();
   return res.status(200).json({ message: "updated successfully" , workspace});
