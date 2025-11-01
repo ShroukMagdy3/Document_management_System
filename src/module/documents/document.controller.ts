@@ -4,6 +4,7 @@ import {
   downloadFile,
   freezeDoc,
   getAllDoc,
+  preview,
   unfreezeDoc,
   uploadFiles,
 } from "./document.service";
@@ -60,5 +61,8 @@ documentRouter.patch(
   validation({ params: freezeSchema }),
   unfreezeDoc
 );
+
+
+documentRouter.get("/preview/:docId" ,Authentication(tokenEnum.access) , validation({ params: freezeSchema }) ,preview )
 
 export default documentRouter;
