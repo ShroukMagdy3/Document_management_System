@@ -1,8 +1,14 @@
 import mongoose, { Document, Types } from "mongoose";
 
+interface Attachment {
+  _id: string;
+  public_url: string;
+  secure_url: string;
+}
+
 export interface IDocument extends Document {
   workspaceId: Types.ObjectId;
-  attachments: string[];
+  attachments: Attachment[];
   name: string;
   ownerNID: string;
   type: string;
