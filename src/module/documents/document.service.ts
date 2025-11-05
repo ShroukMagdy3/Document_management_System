@@ -3,13 +3,19 @@ import {
   fileSchema,
   freezeSchemaType,
   searchSchemaType,
+  updateDocSchemaParamsType,
+  updateDocSchemaType,
   uploadFileSchema,
 } from "./document.validation";
 import { workspaceModel } from "./../../DB/models/workspace.model";
 import { Request, Response, NextFunction } from "express";
 import cloudinary from "../../utilities/cloudinary";
 import { AppError } from "../../utilities/classError";
-import { DocumentModel } from "../../DB/models/document.model";
+import {
+  AccessControlEnum,
+  DocumentModel,
+  IDocument,
+} from "../../DB/models/document.model";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 
@@ -18,7 +24,7 @@ export const uploadFiles = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const { name, type } = uploadFileSchema.parse(req.body);
+  const { name, type, accessControl } = uploadFileSchema.parse(req.body);
   const attachments = fileSchema.parse(req.files);
   const { workspaceId } = req.params;
   const nid = req?.user.nid!;
@@ -40,7 +46,7 @@ export const uploadFiles = async (
     attachments.map((file) =>
       cloudinary.uploader.upload(file.path, {
         folder: `keeply/users/${workspace.userNID}/${type}`,
-        public_id: `${file.originalname}-${uuidv4()}`,
+        public_id: `${uuidv4()}-${file.originalname}`,
       })
     )
   );
@@ -51,7 +57,7 @@ export const uploadFiles = async (
   }));
 
   const document = await DocumentModel.findOneAndUpdate(
-    { ownerNID: nid, name, type, workspaceId },
+    { ownerNID: nid, name, type, workspaceId, accessControl },
     { $addToSet: { attachments: { $each: attachmentsToAdd } } },
     { new: true, upsert: true }
   );
@@ -77,8 +83,13 @@ export const downloadFile = async (
   }
 
   const doc = await DocumentModel.findOne({
+    workspaceId,
     _id: DocumentId,
     deletedAt: { $exists: false },
+    $or: [
+      { ownerNID: req.user.nid },
+      { accessControl: AccessControlEnum.public },
+    ],
   });
   if (!doc) {
     throw new AppError("there this no document", 404);
@@ -117,8 +128,11 @@ export const getAllDoc = async (
 
   const docs = await DocumentModel.find({
     workspaceId,
-    ownerNID: req.user.nid,
     deletedBy: { $exists: false },
+    $or: [
+      { accessControl: AccessControlEnum.public },
+      { ownerNID: req.user.nid },
+    ],
   });
   if (!docs.length) {
     return res
@@ -224,8 +238,11 @@ export const preview = async (
 
   const doc = await DocumentModel.findOne({
     _id: docId,
-    ownerNID: req.user.nid,
     workspaceId,
+    $or: [
+      { accessControl: AccessControlEnum.public },
+      { ownerNID: req.user.nid },
+    ],
   });
   if (!doc) {
     return res.status(403).json({ message: "unauthorized" });
@@ -258,8 +275,11 @@ export const listDoc = async (
     throw new AppError("there is no workspace or you are unauthorized", 404);
   }
   const docs = await DocumentModel.find({
-    ownerNID: req.user.nid,
     workspaceId,
+    $or: [
+      { accessControl: AccessControlEnum.public },
+      { ownerNID: req.user.nid },
+    ],
   });
   if (docs.length === 0) {
     throw new AppError("there are no docs for you", 404);
@@ -272,19 +292,33 @@ export const searchAndSort = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { name , type  , sort = "createdAt" , order = "desc" } = req.query as searchSchemaType;
+  const {
+    name,
+    type,
+    sort = "createdAt",
+    order = "desc",
+  } = req.query as searchSchemaType;
   const { workspaceId } = req.params;
   if (!name && !type) {
     throw new AppError("you must provide name or type for search", 400);
   }
-  let filter : any = {ownerNID:req.user.nid , workspaceId} ;
- if(name){
-   filter.name={$regex:name , $options:"i"}
- }
- if(type) {
-  filter.type = {$regex :type , $options :"i"}
+  let filter: any = {
+    workspaceId,
+    deletedAt: { $exists: false },
+    $or: [
+      { accessControl: AccessControlEnum.public },
+      { ownerNID: req.user.nid },
+    ],
+  };
+  if (name) {
+    filter.name = { $regex: name, $options: "i" };
   }
-  const doc = await DocumentModel.find(filter).sort({ [sort] :  order === "desc" ? -1 : 1 })
+  if (type) {
+    filter.type = { $regex: type, $options: "i" };
+  }
+  const doc = await DocumentModel.find(filter).sort({
+    [sort]: order === "desc" ? -1 : 1,
+  });
 
   if (!doc) {
     throw new AppError("No documents for you or you are un authorized! ", 400);
@@ -293,8 +327,85 @@ export const searchAndSort = async (
     throw new AppError("there is no documents for you", 400);
   }
 
-
   return res.status(200).json({ message: "success", doc });
 };
+export const getDoc = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { docId, workspaceId } = req.params;
+  if (!docId) {
+    throw new AppError("document Id is required", 404);
+  }
+  const workspace = await workspaceModel.findOne({ _id: workspaceId });
+  if (!workspace) {
+    throw new AppError("you must create workspace first!");
+  }
+  const doc = await DocumentModel.findOne({
+    _id: docId,
+    workspaceId,
+    $or: [
+      { accessControl: AccessControlEnum.public },
+      { ownerNID: req.user.nid },
+    ],
+    deletedBy: { $exists: false },
+  });
+  if (!doc) {
+    throw new AppError("There is no document for you", 400);
+  }
+  let attachmentsMetaData: { type: string; url: string }[] = [];
+  if (doc.attachments && doc?.attachments.length > 0) {
+    for (const obj of doc.attachments) {
+      if (obj.public_url) {
+        const type = obj.public_url.split(".").pop();
+        attachmentsMetaData.push({
+          url: obj.secure_url,
+          type: type as unknown as string,
+        });
+      }
+    }
+  }
+  return res
+    .status(200)
+    .json({ message: "success", document: doc, attachmentsMetaData });
+};
 
+export const updateDoc = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { docId, workspaceId } = req.params as updateDocSchemaParamsType;
+  const { type, name, accessControl }: updateDocSchemaType = req.body;
 
+  if (!docId) {
+    throw new AppError("document Id is required", 404);
+  }
+  const workspace = await workspaceModel.findOne({ _id: workspaceId });
+  if (!workspace) {
+    throw new AppError("you must create workspace first!");
+  }
+  const doc = await DocumentModel.findOne({
+    _id: docId,
+    workspaceId,
+    deletedBy: { $exists: false },
+    ownerNID: req.user.nid,
+  });
+  if (!doc) {
+    throw new AppError("There is no document for you", 400);
+  }
+  if (type) {
+    doc.type = type;
+    workspace.category?.push(type);
+    await workspace.save();
+  }
+  if (name) {
+    doc.name = name;
+  }
+  if (accessControl) {
+    doc.accessControl = accessControl;
+  }
+  await doc.save();
+  return res.status(200).json({ message: "success", documents: doc });
+};

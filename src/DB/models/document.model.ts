@@ -1,9 +1,14 @@
 import mongoose, { Document, Types } from "mongoose";
+import { WorkspaceCategoryEnum } from "./workspace.model";
 
 interface Attachment {
   _id: string;
   public_url: string;
   secure_url: string;
+}
+export enum AccessControlEnum {
+  private ="private", 
+  public ="public"
 }
 
 export interface IDocument extends Document {
@@ -11,13 +16,14 @@ export interface IDocument extends Document {
   attachments: Attachment[];
   name: string;
   ownerNID: string;
-  type: string;
+  type: WorkspaceCategoryEnum;
   deletedBy:string;
   deletedAt:Date
   restoreAt:Date;
   restoreBy:string
   createdAt: Date;
   updatedAt: Date;
+  accessControl:AccessControlEnum
 }
 
 const DocumentSchema = new mongoose.Schema<IDocument>(
@@ -33,6 +39,7 @@ const DocumentSchema = new mongoose.Schema<IDocument>(
     },
     type: {
       type: String,
+      enum:WorkspaceCategoryEnum,
       required: true,
     },
     ownerNID: {
@@ -60,12 +67,20 @@ const DocumentSchema = new mongoose.Schema<IDocument>(
     },
     restoreBy:{
       type:String
+    },
+    accessControl:{
+      type:String,
+      enum:AccessControlEnum,
+      default:AccessControlEnum.public
     }
   }
   ,{
     timestamps: true,
   }
 );
+
+DocumentSchema.index({ name: 1 });
+DocumentSchema.index({ type: 1 });
 
 export const DocumentModel =
   mongoose.model<IDocument>("Document", DocumentSchema) ||

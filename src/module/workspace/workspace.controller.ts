@@ -9,13 +9,35 @@ import documentRouter from "../documents/document.controller";
 import { MulterCloud, validationFileType } from "../../middleware/multer";
 
 const workspaceRouter = Router();
-workspaceRouter.use("/:workspaceId/documents" , documentRouter)
+workspaceRouter.use("/:workspaceId/documents", documentRouter);
 
-
-workspaceRouter.post( "/createWorkspace" , Authentication(tokenEnum.access) , validation({body: createWorkSpaceSchema}), WS.createWorkspace )
-workspaceRouter.get("/getAll",Authentication(tokenEnum.access) ,Authorization({role : RoleEnum.admin}), WS.getAllWorkspaces)
-workspaceRouter.get("/getOne/:id" , Authentication(tokenEnum.access), WS.getWorkspace)
-workspaceRouter.delete("/deleteWorkspace/:id" , Authentication(tokenEnum.access), WS.deleteWorkspace)
-workspaceRouter.patch("/update/:id" , Authentication(tokenEnum.access), validation({body:updateSchema}), WS.updateWorkspace)
+workspaceRouter.post(
+  "/createWorkspace",
+  Authentication(tokenEnum.access),
+  validation({ body: createWorkSpaceSchema }),
+  WS.createWorkspace
+);
+workspaceRouter.get(
+  "/getAll",
+  Authentication(tokenEnum.access),
+  Authorization({ role: RoleEnum.admin }),
+  WS.getAllWorkspaces
+);
+workspaceRouter.get(
+  "/getOne/:id",
+  Authentication(tokenEnum.access),
+  WS.getWorkspace
+);
+workspaceRouter.delete(
+  "/deleteWorkspace/:id",
+  Authentication(tokenEnum.access),
+  WS.deleteWorkspace
+);
+workspaceRouter.patch(
+  "/update/:id",
+  Authentication(tokenEnum.access),
+  validation({ body: updateSchema }),
+  WS.updateWorkspace
+);
 
 export default workspaceRouter;
