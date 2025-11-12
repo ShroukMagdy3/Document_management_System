@@ -4,6 +4,7 @@ import { verifyToken } from "../utilities/token";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../DB/models/users.model";
 import { email } from "zod";
+import { RevokeTokenModel } from "../DB/models/revokeToken.model";
 
 export enum tokenEnum {
   refresh = "refresh",
@@ -53,6 +54,10 @@ export const Authentication = (tokenType: tokenEnum) => {
     if (!user.confirmed) {
       throw new AppError("please confirm email");
     }
+     const revokeToken = await RevokeTokenModel.findOne({ token : decode.jti });
+      if (revokeToken) {
+        throw new Error("you must login again" ,{cause:403});
+      }
       
     
     

@@ -28,8 +28,10 @@ const limiter = rateLimit({
 const bootstrap = async () => {
   app.use(express.json());
   app.use(helmet());
-  app.use(cors());
-  app.use(limiter);
+  app.use(cors({
+    origin: "http://localhost:5173"
+  }));
+  // app.use(limiter);
 
   await checkConnection();
   await checkSync()

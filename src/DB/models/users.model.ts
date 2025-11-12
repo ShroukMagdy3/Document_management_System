@@ -10,6 +10,7 @@ export enum RoleEnum {
 export interface IUser {
   id?: number;
   userName: string;
+  image?:string;
   email: string;
   password: string;
   nid: string;
@@ -88,6 +89,10 @@ const User = sequelize.define<IUserModel>(
       defaultValue: false,
       allowNull: false,
     },
+   image: {
+  type: DataTypes.STRING,
+  allowNull: true,
+}
   },
   {
     timestamps: true,

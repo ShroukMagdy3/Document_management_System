@@ -4,35 +4,21 @@ import * as WS from "./workspace.service";
 import { Authorization } from "../../middleware/authorization";
 import { RoleEnum } from "../../DB/models/users.model";
 import { validation } from "../../middleware/validation";
-import { createWorkSpaceSchema, updateSchema } from "./workspace.validation";
+import { updateSchema } from "./workspace.validation";
 import documentRouter from "../documents/document.controller";
 import { MulterCloud, validationFileType } from "../../middleware/multer";
 
 const workspaceRouter = Router();
-workspaceRouter.use("/:workspaceId/documents", documentRouter);
+workspaceRouter.use("/documents", documentRouter);
 
-workspaceRouter.post(
-  "/createWorkspace",
-  Authentication(tokenEnum.access),
-  validation({ body: createWorkSpaceSchema }),
-  WS.createWorkspace
-);
+
+
 workspaceRouter.get(
-  "/getAll",
+  "/getMyWorkspace",
   Authentication(tokenEnum.access),
-  Authorization({ role: RoleEnum.admin }),
-  WS.getAllWorkspaces
+  WS.getMyWorkspace
 );
-workspaceRouter.get(
-  "/getOne/:id",
-  Authentication(tokenEnum.access),
-  WS.getWorkspace
-);
-workspaceRouter.delete(
-  "/deleteWorkspace/:id",
-  Authentication(tokenEnum.access),
-  WS.deleteWorkspace
-);
+
 workspaceRouter.patch(
   "/update/:id",
   Authentication(tokenEnum.access),

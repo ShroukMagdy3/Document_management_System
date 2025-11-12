@@ -1,19 +1,12 @@
 import mongoose, { Document } from "mongoose";
 import { DocumentModel } from "./document.model";
+import { Types } from "mongoose";
 
-export enum WorkspaceCategoryEnum {
-  school = "school",
-  internship = "internship",
-  company = "company",
-  personal = "personal",
-  other = "other",
-}
 
 export interface IWorkspace extends Document {
   userNID: string;
   name: string;
-  description?: string;
-  category?: string[];
+  documents:Types.ObjectId
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,18 +22,10 @@ const workspaceSchema = new mongoose.Schema<IWorkspace>(
       type: String,
       required: true,
     },
-    description: {
-      type: String,
-      minlength: 3,
-      maxlength: 200,
-    },
-    category: [
-      {
-        type: String,
-        enum: Object.keys(WorkspaceCategoryEnum),
-        required: true,
-      },
-    ],
+    documents:{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"Document"
+    }
   },
   {
     timestamps: true,

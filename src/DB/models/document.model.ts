@@ -1,29 +1,28 @@
 import mongoose, { Document, Types } from "mongoose";
-import { WorkspaceCategoryEnum } from "./workspace.model";
 
-interface Attachment {
-  _id: string;
-  public_url: string;
-  secure_url: string;
-}
 export enum AccessControlEnum {
-  private ="private", 
-  public ="public"
+  private = "private",
+  public = "public",
+}
+export enum typeEnum {
+  file = "file",
+  folder = "folder",
 }
 
 export interface IDocument extends Document {
   workspaceId: Types.ObjectId;
-  attachments: Attachment[];
-  name: string;
+  name: String;
+  previewUrl: String;
+  secureUrl: String;
+  resourceType: String;
   ownerNID: string;
-  type: WorkspaceCategoryEnum;
-  deletedBy:string;
-  deletedAt:Date
-  restoreAt:Date;
-  restoreBy:string
+  deletedBy: string;
+  deletedAt: Date;
+  restoreAt: Date;
+  restoreBy: string;
   createdAt: Date;
   updatedAt: Date;
-  accessControl:AccessControlEnum
+
 }
 
 const DocumentSchema = new mongoose.Schema<IDocument>(
@@ -33,48 +32,32 @@ const DocumentSchema = new mongoose.Schema<IDocument>(
       required: true,
       ref: "Workspace",
     },
-    name: {
-      type: String,
-      required: true,
-    },
-    type: {
-      type: String,
-      enum:WorkspaceCategoryEnum,
-      required: true,
-    },
     ownerNID: {
       type: String,
       minlength: 14,
       maxlength: 14,
       required: true,
     },
- attachments: [
-    {
-      public_url: String,
-      secure_url: String
-    }
-  ],
-   deletedAt: {
+    name: { type: String, required: true },
+    previewUrl: { type: String },
+    secureUrl: { type: String, required: true },
+    resourceType: { type: String, required: true },
+    deletedAt: {
       type: Date,
     },
-    deletedBy :{
-      type:String,
-      maxLength:14,
-      minlength:14
+    deletedBy: {
+      type: String,
+      maxLength: 14,
+      minlength: 14,
     },
-    restoreAt:{
-       type: Date,
+    restoreAt: {
+      type: Date,
     },
-    restoreBy:{
-      type:String
+    restoreBy: {
+      type: String,
     },
-    accessControl:{
-      type:String,
-      enum:AccessControlEnum,
-      default:AccessControlEnum.public
-    }
-  }
-  ,{
+  },
+  {
     timestamps: true,
   }
 );
