@@ -4,7 +4,7 @@ import os from "os";
 import { v4 as uuidv4 } from "uuid";
 import { AppError } from "../utilities/classError";
 import cloudinary from "../utilities/cloudinary";
-import streamifier from "streamifier";
+
 
 export const validationFileType = {
   image: ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"],
