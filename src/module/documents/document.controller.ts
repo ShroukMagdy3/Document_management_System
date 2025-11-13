@@ -30,7 +30,7 @@ const documentRouter = Router();
 documentRouter.post(
   "/uploadPdf",
   Authentication(tokenEnum.access),
-  MulterCloud2().single("attachment"),
+  MulterCloud2().single("pdf"),
   uploadPdf
 );
 

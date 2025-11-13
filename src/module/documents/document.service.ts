@@ -14,7 +14,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import cloudinary from "../../utilities/cloudinary";
 import { Request, Response, NextFunction } from "express";
-import generatePreview from "../../utilities/preview";
+
 import path from "path";
 import fs from "fs";
 
@@ -89,7 +89,7 @@ export const uploadPdf = async (
     folder: `keeply/users/${req.user.id}/previews`,
     public_id: `${uuidv4()}-preview-${file.originalname}`,
     resource_type: "image",
-    format: "jpg",
+    pages:true
   });
 
   const previewUrl = previewResult.secure_url;
@@ -233,10 +233,6 @@ export const getAllDoc = async (
   const docs = await DocumentModel.find({
     ownerNID: req.user.nid,
     deletedBy: { $exists: false },
-    $or: [
-      { accessControl: AccessControlEnum.public },
-      { ownerNID: req.user.nid },
-    ],
   });
   if (!docs.length) {
     return res
@@ -320,11 +316,13 @@ export const freezeDoc = async (
       _id: docId,
       workspaceId: workspace._id,
       ownerNID: req.user.nid,
+      deletedAt: { $exists: false }, 
     },
     {
-      deletedAt: Date.now(),
+      deletedAt: new Date(),
       deletedBy: req.user.nid,
-    }
+    },
+    { new: true }
   );
   if (!doc) {
     throw new AppError("this Doc not found or already freezed");
@@ -346,21 +344,20 @@ export const unfreezeDoc = async (
   if (!workspace) {
     throw new AppError("no workspaces", 404);
   }
-  const doc = await DocumentModel.findOneAndUpdate(
+ const doc = await DocumentModel.findOneAndUpdate(
     {
       _id: docId,
-      ownerNID: req.user.nid,
       workspaceId: workspace._id,
-      deletedBy: { $exists: true },
+      ownerNID: req.user.nid,
+      deletedAt: { $exists: true }, 
     },
     {
       $unset: { deletedAt: "", deletedBy: "" },
-      $set: {
-        restoreAt: Date.now(),
-        restoreBy: req.user.nid,
-      },
-    }
+      $set: { restoreAt: new Date(), restoreBy: req.user.nid },
+    },
+    { new: true }
   );
+
   if (!doc) {
     throw new AppError("this Doc not found or already freezed");
   }
@@ -384,8 +381,6 @@ export const cycleBin = async (
     workspaceId: workspace._id,
     deletedBy: { $exists: true },
     deletedAt: { $exists: true },
-    restoreAt: { $exists: false },
-    restoreBy: { $exists: false },
   });
   if (!documents) {
     throw new AppError("No freezed Documents", 404);
