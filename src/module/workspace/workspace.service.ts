@@ -11,9 +11,9 @@ export const getMyWorkspace = async (
   next: NextFunction
 ) => {
   const userNId = req.user.nid;
-  const workspace = await workspaceModel.findOne({ userNID: userNId });
+  const workspace = await workspaceModel.findOne({ userNID: req.user.nid });
   if (!workspace) {
-    throw new AppError("There is no workspace ", 404);
+    throw new AppError("There is no workspace!", 404);
   }
   return res
     .status(201)

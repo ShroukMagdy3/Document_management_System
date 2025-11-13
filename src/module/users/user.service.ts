@@ -37,11 +37,14 @@ export const signUp = async (
     nid,
     otp: hashOtp,
   });
+
   const workspace = await workspaceModel.create ({
     name:"My Workspace",
     userNID: nid
   })
+
   return res.status(201).json({ message: "Created", addUser , workspace });
+
 };
 
 export const confirmEmail = async (

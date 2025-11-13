@@ -23,7 +23,7 @@ import {
   MulterCloudMemory,
   validationFileType,
 } from "../../middleware/multer";
-import { freezeSchema } from "./document.validation";
+import { freezeSchema, openPdfSchema } from "./document.validation";
 import { validation } from "../../middleware/validation";
 const documentRouter = Router();
 
@@ -43,8 +43,6 @@ documentRouter.get(
   "/downloadPdf/:id",
   downloadPdf
 );
-
-
 
 
 documentRouter.post(
@@ -96,7 +94,6 @@ documentRouter.patch(
   unfreezeDoc
 );
 documentRouter.get("/cycleBin", Authentication(tokenEnum.access), cycleBin);
-
 documentRouter.get("/sort", Authentication(tokenEnum.access), sortDesc);
 documentRouter.get("/search", Authentication(tokenEnum.access), search);
 

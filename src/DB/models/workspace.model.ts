@@ -6,7 +6,7 @@ import { Types } from "mongoose";
 export interface IWorkspace extends Document {
   userNID: string;
   name: string;
-  documents:Types.ObjectId
+  documents:Types.ObjectId[]
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,10 +22,10 @@ const workspaceSchema = new mongoose.Schema<IWorkspace>(
       type: String,
       required: true,
     },
-    documents:{
+    documents:[{
       type:mongoose.Schema.Types.ObjectId,
       ref:"Document"
-    }
+    }]
   },
   {
     timestamps: true,

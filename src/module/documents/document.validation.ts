@@ -32,5 +32,15 @@ export const updateDocSchema= z.strictObject({
 })
 
 
+export const openPdfSchema = z.strictObject({
+ docId:z.string().refine((value) => {
+    return mongoose.Types.ObjectId.isValid(value);
+  }, { message: "Invalid document id" }) ,
+
+})
+
+
+
 export type freezeSchemaType = z.infer<typeof freezeSchema >
 export type updateDocSchemaType = z.infer<typeof updateDocSchema >
+export type openPdfSchemaType = z.infer<typeof openPdfSchema >

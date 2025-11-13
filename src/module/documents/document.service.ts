@@ -2,6 +2,7 @@ import streamifier from "streamifier";
 import {
   fileSchema,
   freezeSchemaType,
+  openPdfSchemaType,
   updateDocSchemaType,
 } from "./document.validation";
 import { workspaceModel } from "./../../DB/models/workspace.model";
@@ -85,12 +86,14 @@ export const uploadPdf = async (
 
   const secureUrl = `/uploads/${serverFileName}`;
 
-  const previewResult = await cloudinary.uploader.upload(serverFilePath, {
-    folder: `keeply/users/${req.user.id}/previews`,
-    public_id: `${uuidv4()}-preview-${file.originalname}`,
-    resource_type: "image",
-    pages:true
-  });
+ const previewResult = await cloudinary.uploader.upload(serverFilePath, {
+  folder: `keeply/users/${req.user.id}/previews`,
+  public_id: `${uuidv4()}-preview-${file.originalname}`,
+  resource_type: "auto", 
+  format: "jpg", 
+  pages: 1 
+});
+
 
   const previewUrl = previewResult.secure_url;
 

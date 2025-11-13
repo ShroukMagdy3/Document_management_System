@@ -1,8 +1,9 @@
 import { Sequelize } from "sequelize";
 import mongoose from "mongoose";
 
-export const sequelize = new Sequelize(process.env.DB_NAME! , "root", "", {
-  host: "localhost",
+
+export const sequelize = new Sequelize(process.env.DB_URL!, {
+  host: process.env.DB_HOST!,
   dialect: "mysql",
 });
 
@@ -18,7 +19,7 @@ export const checkConnection = async () => {
 };
 
 export const checkMongo = async ()=>{
-  await mongoose.connect(process.env.LINK_MONGO!).then(()=>{
+  await mongoose.connect(process.env.DB_MONGO!).then(()=>{
     console.log("connection to mongo is success");
   }).catch((err)=>{
     console.log("error in connection to DB");

@@ -9,7 +9,7 @@ export function otpEmailTemplate(userName: string, otp: string): string {
     <style>
       body {
         font-family: 'Arial', sans-serif;
-        background-color: #f8f9fa;
+        background-color: #f3f4f6; /* خلفية رمادية فاتحة */
         color: #333;
         margin: 0;
         padding: 0;
@@ -23,7 +23,7 @@ export function otpEmailTemplate(userName: string, otp: string): string {
         overflow: hidden;
       }
       .header {
-        background-color: #4a90e2;
+        background-color: #f59e0b; /* لون أمبيري */
         color: #fff;
         text-align: center;
         padding: 20px;
@@ -37,9 +37,9 @@ export function otpEmailTemplate(userName: string, otp: string): string {
       .otp {
         font-size: 32px;
         font-weight: bold;
-        color: #4a90e2;
+        color: #f59e0b; /* لون أمبيري */
         letter-spacing: 4px;
-        background: #f3f6fb;
+        background: #e5e7eb; /* رمادي فاتح */
         padding: 10px 20px;
         border-radius: 8px;
         display: inline-block;
@@ -54,8 +54,8 @@ export function otpEmailTemplate(userName: string, otp: string): string {
         text-align: center;
         padding: 15px;
         font-size: 13px;
-        color: #aaa;
-        border-top: 1px solid #eee;
+        color: #9ca3af; /* رمادي متوسط */
+        border-top: 1px solid #e5e7eb;
       }
     </style>
   </head>
@@ -76,3 +76,4 @@ export function otpEmailTemplate(userName: string, otp: string): string {
   </html>
   `;
 }
+
