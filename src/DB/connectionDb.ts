@@ -1,5 +1,7 @@
 import { Sequelize } from "sequelize";
 import mongoose from "mongoose";
+// Explicit import to force bundlers to include mysql2 driver
+import * as mysql2 from "mysql2";
 
 type GlobalWithCache = typeof globalThis & {
   __sequelize?: Sequelize;
@@ -17,6 +19,7 @@ if (!g.__sequelize) {
   g.__sequelize = new Sequelize(process.env.DB_URL, {
     host: process.env.DB_HOST,
     dialect: "mysql",
+    dialectModule: mysql2,
     logging: false,
   });
 }
