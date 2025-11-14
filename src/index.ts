@@ -1,3 +1,11 @@
-import bootstrap from "./app.controller";
+import createApp from "./app.controller";
 
-bootstrap();
+const start = async () => {
+	const app = await createApp();
+	const port: string | number = process.env.PORT || 5000;
+	app.listen(port, () => {
+		console.log(`server is running on ${port}`);
+	});
+};
+
+start();
