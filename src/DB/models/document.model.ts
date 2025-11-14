@@ -65,6 +65,5 @@ const DocumentSchema = new mongoose.Schema<IDocument>(
 DocumentSchema.index({ name: 1 });
 DocumentSchema.index({ type: 1 });
 
-export const DocumentModel =
-  mongoose.model<IDocument>("Document", DocumentSchema) ||
-  mongoose.models.Document;
+export const DocumentModel = (mongoose.models.Document as mongoose.Model<IDocument>) || mongoose.model<IDocument>("Document", DocumentSchema);
+

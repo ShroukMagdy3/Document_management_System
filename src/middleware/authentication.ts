@@ -56,7 +56,7 @@ export const Authentication = (tokenType: tokenEnum) => {
     }
      const revokeToken = await RevokeTokenModel.findOne({ token : decode.jti });
       if (revokeToken) {
-        throw new Error("you must login again" ,{cause:403});
+        throw new Error("you must login again");
       }
       
     

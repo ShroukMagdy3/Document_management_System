@@ -4,8 +4,7 @@
     "module": "commonjs",
     "rootDir": "./src",
     "outDir": "./dist",
-
-    "lib": ["ES2022"], 
+ 
     "esModuleInterop": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,

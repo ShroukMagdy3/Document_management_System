@@ -6,7 +6,7 @@ export const signUpSchema = z.strictObject({
     .string()
     .min(3, "Username must be at least 3 characters")
     .max(50, "Username is too long"),
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
   password: z
     .string()
     .regex(
@@ -23,11 +23,11 @@ export const signUpSchema = z.strictObject({
   role: z.enum(RoleEnum).default(RoleEnum.user).optional(),
 });
 export const confirmEmailSchema = z.strictObject({
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
   otp: z.string().length(6),
 });
 export const signInSchema = z.strictObject({
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
   password: z
     .string()
     .regex(
@@ -35,7 +35,6 @@ export const signInSchema = z.strictObject({
       "Password must contain at least 8 characters, including uppercase, lowercase, number, and special character"
     ),
 });
-
 
 
 export type signUpSchemaType = z.infer<typeof signUpSchema>;
