@@ -12,8 +12,8 @@ export enum tokenEnum {
 
 export const Authentication = (tokenType: tokenEnum) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const { authorization } = req.headers;
-    const [prefix, token] = authorization?.split(" ") || [];
+    const { Authorization } = req.headers;
+    const [prefix, token] = Authorization?.split(" ") || [];
     if (!prefix || !token) {
       throw new AppError("invalid token", 401);
     }

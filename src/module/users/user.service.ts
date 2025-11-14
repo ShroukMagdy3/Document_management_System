@@ -14,6 +14,7 @@ import cloudinary from "../../utilities/cloudinary";
 import { RevokeTokenModel } from "../../DB/models/revokeToken.model";
 import { workspaceModel } from "../../DB/models/workspace.model";
 
+
 export const signUp = async (
   req: Request,
   res: Response,

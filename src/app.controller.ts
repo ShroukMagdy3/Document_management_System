@@ -29,17 +29,17 @@ import mongoose from "mongoose";
 const app: express.Application = express();
 
 export const createApp = async (): Promise<express.Application> => {
-  app.use(express.json());
-  app.use(helmet());
   app.use(
     cors({
-      origin: "*",
+      origin: "http://localhost:5173",
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "token"],
     })
   );
 
   app.options("*", cors()); 
+  app.use(express.json());
+  app.use(helmet());
   // Validate required env vars before attempting any DB connections
   validateEnv();
   await checkConnection();
