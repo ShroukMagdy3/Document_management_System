@@ -1,3 +1,4 @@
+import '../src/loadEnv';
 import { IncomingMessage, ServerResponse } from 'http';
 import createApp from '../src/app.controller';
 
