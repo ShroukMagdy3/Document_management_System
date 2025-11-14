@@ -29,10 +29,9 @@ const bootstrap = async () => {
   app.use(express.json());
   app.use(helmet());
   app.use(cors({
-   origin: [
-    'http://localhost:5173', 
-    'https://document-management-system-lac.vercel.app'
-  ],
+   origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With","token"]
   }));
   // app.use(limiter);
 
