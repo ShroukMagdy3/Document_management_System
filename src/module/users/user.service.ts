@@ -1,3 +1,5 @@
+import  cors  from 'cors';
+
 import { Request, Response, NextFunction } from "express";
 import User, { RoleEnum } from "../../DB/models/users.model";
 import { AppError } from "../../utilities/classError";
@@ -13,6 +15,25 @@ import { v4 as uuidv4 } from "uuid";
 import cloudinary from "../../utilities/cloudinary";
 import { RevokeTokenModel } from "../../DB/models/revokeToken.model";
 import { workspaceModel } from "../../DB/models/workspace.model";
+
+
+export default function initMiddleware(middleware: any) {
+  return (req: Request, res: Response) =>
+    new Promise((resolve, reject) => {
+      middleware(req, res, (result: any) => {
+        if (result instanceof Error) return reject(result);
+        return resolve(result);
+      });
+    });
+}
+
+const corsMiddleWare = initMiddleware(
+  cors({
+    origin: "*", 
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 
 export const signUp = async (
@@ -72,6 +93,7 @@ export const signIn = async (
   res: Response,
   next: NextFunction
 ) => {
+    await corsMiddleWare(req, res);
   const { email, password }: signInSchemaType = req.body;
   const user = await User.findOne({ where: { email: email, confirmed: true } });
 
