@@ -37,7 +37,7 @@ export const createApp = async (): Promise<express.Application> => {
     })
   );
 
-  app.options("*", cors()); 
+
   app.use(express.json());
   app.use(helmet());
   // Validate required env vars before attempting any DB connections
