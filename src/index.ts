@@ -1,3 +1,4 @@
+import './loadEnv';
 import createApp from "./app.controller";
 
 const start = async () => {

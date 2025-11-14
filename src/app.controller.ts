@@ -11,8 +11,8 @@ function validateEnv() {
   }
 }
 
-// Load env file relative to project root (process.cwd())
-config({ path: resolve(process.cwd(), 'config', '.env') });
+// NOTE: dotenv is loaded by `src/loadEnv.ts` which is imported by the app entry
+// points (`src/index.ts` and `api/index.ts`) before this module is loaded.
 
 import express, { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
