@@ -1,6 +1,5 @@
 import { BOOLEAN, DataTypes, Model } from "sequelize";
 import { sequelize } from "../connectionDb";
-import { boolean } from "zod";
 
 export enum RoleEnum {
   user = "user",

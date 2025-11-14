@@ -10,7 +10,6 @@ import {
 } from "./user.validation";
 import { generateToken } from "../../utilities/token";
 import { v4 as uuidv4 } from "uuid";
-import { email } from "zod";
 import cloudinary from "../../utilities/cloudinary";
 import { RevokeTokenModel } from "../../DB/models/revokeToken.model";
 import { workspaceModel } from "../../DB/models/workspace.model";

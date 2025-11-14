@@ -3,7 +3,6 @@ import { AppError } from "../utilities/classError";
 import { verifyToken } from "../utilities/token";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../DB/models/users.model";
-import { email } from "zod";
 import { RevokeTokenModel } from "../DB/models/revokeToken.model";
 
 export enum tokenEnum {
