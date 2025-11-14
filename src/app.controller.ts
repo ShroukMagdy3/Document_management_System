@@ -15,15 +15,7 @@ import "./utilities/merging";
 
 const app: express.Application = express();
 const port: string | number = process.env.PORT || 5000;
-// const limiter = rateLimit({
-//   max: 20,
-//   windowMs: 5 * 60 * 1000,
-//   message: {
-//     error: "too many requests",
-//   },
-//   statusCode: 429,
-//   legacyHeaders: false,
-// });
+
 
 const bootstrap = async () => {
   app.use(express.json());
@@ -33,7 +25,6 @@ const bootstrap = async () => {
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With","token"]
   }));
-  // app.use(limiter);
 
   await checkConnection();
   await checkSync()
