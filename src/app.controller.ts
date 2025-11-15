@@ -32,7 +32,7 @@ export const createApp = async (): Promise<express.Application> => {
   app.use(
     cors({
       origin: "http://localhost:5173",
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      methods: ["GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "token"],
     })
   );
