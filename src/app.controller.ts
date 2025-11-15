@@ -31,7 +31,7 @@ const app: express.Application = express();
 export const createApp = async (): Promise<express.Application> => {
   app.use(
     cors({
-      origin: "http://localhost:5173",
+      origin: "*",
       methods: ["GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "token"],
     })
