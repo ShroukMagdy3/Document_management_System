@@ -20,10 +20,6 @@ import mongoose from "mongoose";
 
 import fs from "fs";
 
-// Builds a thumbnail preview URL from a Cloudinary upload result, regardless
-// of the file's actual type. Images and PDFs (Cloudinary can rasterize a
-// PDF's first page) get a real thumbnail; videos get a frame grab; anything
-// else (docx, zip, mp3, ...) simply has no visual preview (previewUrl: "").
 const buildPreviewUrl = (uploadResult: {
   resource_type: string;
   public_id: string;
@@ -55,8 +51,6 @@ const buildPreviewUrl = (uploadResult: {
   return "";
 };
 
-// Best-effort extraction of a Cloudinary public_id from a secure_url so we
-// can delete the underlying asset when a document/folder is permanently removed.
 export const extractCloudinaryPublicId = (secureUrl?: string | null): string | null => {
   if (!secureUrl) return null;
   try {
