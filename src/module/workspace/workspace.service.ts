@@ -35,7 +35,7 @@ export const listWorkspaces = async (
     },
     {
       $lookup: {
-        from: DocumentModel.collection.name, // اسم الكولكشن الفعلي في الداتابيز
+        from: DocumentModel.collection.name, 
         let: { workspaceId: "$_id" },
         pipeline: [
           {
