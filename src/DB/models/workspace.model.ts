@@ -3,6 +3,7 @@ import { DocumentModel } from "./document.model";
 import { Types } from "mongoose";
 
 export interface IWorkspace extends Document {
+  _id: Types.ObjectId; 
   userNID: string;
   name: string;
   documents: Types.ObjectId[];

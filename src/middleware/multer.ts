@@ -71,3 +71,31 @@ export const MulterCloudMemory = () => {
     limits: { fileSize: 50 * 1024 * 1024 },
   });
 };
+
+// Used for uploading a whole folder at once (Google Drive style).
+// The frontend sends every file inside the chosen folder under the
+// "files" field, plus a parallel "paths" field (same order) holding each
+// file's relative path (e.g. from <input webkitdirectory> -> file.webkitRelativePath),
+// so the backend can rebuild the exact same folder tree.
+export const MulterFolderUpload = () => {
+  const storage = multer.diskStorage({
+    destination: os.tmpdir(),
+    filename(req, file, cb) {
+      cb(null, `${uuidv4()}-${file.originalname}`);
+    },
+  });
+
+  const fileFilter = (
+    req: Request,
+    file: Express.Multer.File,
+    cb: FileFilterCallback
+  ) => {
+    cb(null, true);
+  };
+
+  return multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 200 * 1024 * 1024, files: 2000 },
+  });
+};

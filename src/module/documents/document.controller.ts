@@ -2,100 +2,104 @@ import { Router } from "express";
 import {
   cycleBin,
   deleteDoc,
-  downloadPdf,
+  downloadDoc,
   freezeDoc,
   getAllDoc,
-  openPdf,
+  openDoc,
   search,
   sortDesc,
   unfreezeDoc,
   updateDoc,
-  uploadAudio,
-  uploadImage,
-  uploadPdf,
-  uploadVideo,
+  createFolder,
+  uploadFile,
+  uploadFolder,
+  listContents,
+  moveDoc,
 } from "./document.service";
 import { Authentication, tokenEnum } from "../../middleware/authentication";
-import asyncHandler from "express-async-handler";
-import {
-  MulterCloud,
-  MulterCloud2,
-  MulterCloudMemory,
-  validationFileType,
-} from "../../middleware/multer";
-import { freezeSchema, openPdfSchema } from "./document.validation";
+import { MulterCloud2, MulterFolderUpload } from "../../middleware/multer";
+import { freezeSchema, createFolderSchema, moveSchema } from "./document.validation";
 import { validation } from "../../middleware/validation";
+import { catchAsync } from "../../utilities/catchAsync";
+
 const documentRouter = Router();
 
+documentRouter.post("/createFolder", Authentication(tokenEnum.access), validation({ body: createFolderSchema }), catchAsync(createFolder));
+
 documentRouter.post(
-  "/uploadPdf",
+  "/uploadFile",
   Authentication(tokenEnum.access),
-  MulterCloud2().single("pdf"),
-  uploadPdf
+  MulterCloud2().single("file"),
+  catchAsync(uploadFile)
+);
+
+documentRouter.post(
+  "/uploadFolder",
+  Authentication(tokenEnum.access),
+  MulterFolderUpload().array("files", 2000),
+  catchAsync(uploadFolder)
+);
+
+
+documentRouter.get(
+  "/list",
+  Authentication(tokenEnum.access),
+  catchAsync(listContents)
+);
+
+// Move a file or folder (and its whole subtree) under a different parent folder
+documentRouter.patch(
+  "/move/:docId",
+  Authentication(tokenEnum.access),
+  validation({ params: freezeSchema, body: moveSchema }),
+  catchAsync(moveDoc)
 );
 
 documentRouter.get(
-  "/openPdf/:id",
-  openPdf
+  "/open/:docId",
+  Authentication(tokenEnum.access),
+  validation({ params: freezeSchema }),
+  catchAsync(openDoc)
 );
 
+// Force-download a document with its original filename (any file type).
 documentRouter.get(
-  "/downloadPdf/:id",
-  downloadPdf
-);
-
-
-documentRouter.post(
-  "/uploadImage",
+  "/download/:docId",
   Authentication(tokenEnum.access),
-  MulterCloud2().single("attachment"),
-  uploadImage
+  validation({ params: freezeSchema }),
+  catchAsync(downloadDoc)
 );
 
-documentRouter.post(
-  "/uploadVideo",
-  Authentication(tokenEnum.access),
-  MulterCloud2().single("attachment"),
-  uploadVideo
-);
-
-documentRouter.post(
-  "/uploadAudio",
-  Authentication(tokenEnum.access),
-  MulterCloud2().single("attachment"),
-  uploadAudio
-);
-
-documentRouter.get("/getAll", Authentication(tokenEnum.access), getAllDoc);
+documentRouter.get("/getAll", Authentication(tokenEnum.access), catchAsync(getAllDoc));
 
 documentRouter.patch(
   "/update/:docId",
   Authentication(tokenEnum.access),
   validation({ params: freezeSchema }),
-  updateDoc
+  catchAsync(updateDoc)
 );
 documentRouter.delete(
   "/delete/:docId",
   Authentication(tokenEnum.access),
   validation({ params: freezeSchema }),
-  deleteDoc
+  catchAsync(deleteDoc)
 );
 
 documentRouter.patch(
   "/freeze/:docId",
   Authentication(tokenEnum.access),
   validation({ params: freezeSchema }),
-  freezeDoc
+  catchAsync(freezeDoc)
 );
 documentRouter.patch(
   "/unfreeze/:docId",
   Authentication(tokenEnum.access),
   validation({ params: freezeSchema }),
-  unfreezeDoc
+  catchAsync(unfreezeDoc) 
 );
-documentRouter.get("/cycleBin", Authentication(tokenEnum.access), cycleBin);
-documentRouter.get("/sort", Authentication(tokenEnum.access), sortDesc);
-documentRouter.get("/search", Authentication(tokenEnum.access), search);
+documentRouter.get("/cycleBin", Authentication(tokenEnum.access), catchAsync(cycleBin));
+documentRouter.get("/sort", Authentication(tokenEnum.access), catchAsync(sortDesc));
+documentRouter.get("/search", Authentication(tokenEnum.access), catchAsync(search));
 
 
 

@@ -72,7 +72,7 @@ export const signIn = async (
   next: NextFunction
 ) => {
   const { email, password }: signInSchemaType = req.body;
-  const user = await User.findOne({ where: { email: email, confirmed: true } });
+  const user = await User.findOne({ where: { email: email } });
 
   if (!user) {
     throw new AppError("email not exist you must signUp first");

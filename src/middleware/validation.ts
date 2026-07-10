@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { ZodType } from "zod";
 import { AppError } from "../utilities/classError";
 
-type reqType =  "body" | "params" | "query" 
+type reqType = "body" | "params" | "query"
 type schemaType = Partial<Record<reqType, ZodType>>;
 
 
@@ -18,7 +18,10 @@ export const validation = (schema: schemaType) => {
       }
     }
     if (validationError.length) {
-      throw new AppError(JSON.parse(validationError as unknown as string));
+      const message = validationError
+        .map((e) => e.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", "))
+        .join(" | ");
+      throw new AppError(message, 400);
     }
     next();
   };

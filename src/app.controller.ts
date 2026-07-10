@@ -70,9 +70,18 @@ export const createApp = async (): Promise<express.Application> => {
     throw new AppError(`URL not found ,Invalid URL ${req.originalUrl}`, 404);
   });
 
-  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    return res.status(500).json({ message: err.message, stack: err.stack });
-  });
+  app.use(
+  (err: Error & { statusCode?: number }, req: Request, res: Response, next: NextFunction) => {
+    const statusCode = err.statusCode && Number.isInteger(err.statusCode) ? err.statusCode : 500;
+    if (statusCode === 500) {
+      console.error("Unhandled error:", err);
+    }
+    return res.status(statusCode).json({
+      message: err.message || "Something went wrong",
+      ...(process.env.NODE_ENV !== "production" ? { stack: err.stack } : {}),
+    });
+  }
+);
 
   return app;
 };
