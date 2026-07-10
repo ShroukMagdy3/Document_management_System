@@ -15,12 +15,21 @@ import {
   uploadFolder,
   listContents,
   moveDoc,
+  getUploadSignature,
+  confirmUpload,
+  confirmFolderUpload,
+
 } from "./document.service";
 import { Authentication, tokenEnum } from "../../middleware/authentication";
 import { MulterCloud2, MulterFolderUpload } from "../../middleware/multer";
-import { freezeSchema, createFolderSchema, moveSchema } from "./document.validation";
+import {
+  freezeSchema, createFolderSchema, moveSchema, uploadSignatureSchema,
+  confirmUploadSchema,
+  confirmFolderUploadSchema,
+} from "./document.validation";
 import { validation } from "../../middleware/validation";
 import { catchAsync } from "../../utilities/catchAsync";
+
 
 const documentRouter = Router();
 
@@ -31,6 +40,27 @@ documentRouter.post(
   Authentication(tokenEnum.access),
   MulterCloud2().single("file"),
   catchAsync(uploadFile)
+);
+
+documentRouter.post(
+  "/uploadSignature",
+  Authentication(tokenEnum.access),
+  validation({ body: uploadSignatureSchema }),
+  catchAsync(getUploadSignature)
+);
+
+documentRouter.post(
+  "/confirmUpload",
+  Authentication(tokenEnum.access),
+  validation({ body: confirmUploadSchema }),
+  catchAsync(confirmUpload)
+);
+
+documentRouter.post(
+  "/confirmFolderUpload",
+  Authentication(tokenEnum.access),
+  validation({ body: confirmFolderUploadSchema }),
+  catchAsync(confirmFolderUpload)
 );
 
 documentRouter.post(
@@ -47,7 +77,6 @@ documentRouter.get(
   catchAsync(listContents)
 );
 
-// Move a file or folder (and its whole subtree) under a different parent folder
 documentRouter.patch(
   "/move/:docId",
   Authentication(tokenEnum.access),
@@ -95,7 +124,7 @@ documentRouter.patch(
   "/unfreeze/:docId",
   Authentication(tokenEnum.access),
   validation({ params: freezeSchema }),
-  catchAsync(unfreezeDoc) 
+  catchAsync(unfreezeDoc)
 );
 documentRouter.get("/cycleBin", Authentication(tokenEnum.access), catchAsync(cycleBin));
 documentRouter.get("/sort", Authentication(tokenEnum.access), catchAsync(sortDesc));

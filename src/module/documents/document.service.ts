@@ -4,6 +4,8 @@ import {
   updateDocSchemaType,
   createFolderSchemaType,
   moveSchemaType,
+  confirmUploadSchemaType,
+  confirmFolderUploadSchemaType,
 } from "./document.validation";
 import { workspaceModel } from "./../../DB/models/workspace.model";
 import { AppError } from "../../utilities/classError";
@@ -24,8 +26,10 @@ const buildPreviewUrl = (uploadResult: {
   resource_type: string;
   public_id: string;
   format?: string;
+  mimeType?: string;
 }): string => {
-  const { resource_type, public_id, format } = uploadResult;
+  const { resource_type, public_id, format, mimeType } = uploadResult;
+  const isAudio = mimeType?.startsWith("audio/");
   try {
     if (resource_type === "image") {
       return cloudinary.url(public_id, {
@@ -36,7 +40,7 @@ const buildPreviewUrl = (uploadResult: {
         crop: "thumb",
       });
     }
-    if (resource_type === "video") {
+    if (resource_type === "video" && !isAudio) {
       return cloudinary.url(public_id, {
         resource_type: "video",
         format: "jpg",
@@ -400,7 +404,12 @@ export const uploadFile = async (
     resource_type: "auto",
   });
 
-  const previewUrl = buildPreviewUrl(uploadResult);
+  const previewUrl = buildPreviewUrl({
+    resource_type: uploadResult.resource_type,
+    public_id: uploadResult.public_id,
+    format: uploadResult.format,
+    mimeType: file.mimetype,
+  });
 
   const document = await DocumentModel.create({
     ownerNID: nid,
@@ -440,9 +449,6 @@ export const openDoc = async (
   return res.redirect(doc.secureUrl as unknown as string);
 };
 
-// Force-download a document with its original name, regardless of file type.
-// Streams the file through the server so the correct filename/Content-Type
-// are always set, instead of depending on any local/persistent disk storage.
 export const downloadDoc = async (
   req: Request,
   res: Response,
@@ -563,8 +569,12 @@ export const uploadFolder = async (
       resource_type: "auto",
     });
 
-    const previewUrl = buildPreviewUrl(uploadResult);
-
+    const previewUrl = buildPreviewUrl({
+      resource_type: uploadResult.resource_type,
+      public_id: uploadResult.public_id,
+      format: uploadResult.format,
+      mimeType: file.mimetype,
+    });
     const document = await DocumentModel.create({
       ownerNID: nid,
       workspaceId: workspace._id,
@@ -627,7 +637,6 @@ export const listContents = async (
   });
 };
 
-// Move a file or a whole folder (with its subtree) to a different parent folder.
 export const moveDoc = async (
   req: Request,
   res: Response,
@@ -674,4 +683,168 @@ export const moveDoc = async (
   }
 
   return res.status(200).json({ message: "success", document: doc });
+};
+
+
+
+export const getUploadSignature = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { count } = req.body as { count?: number };
+  const total = Math.min(Math.max(Number(count) || 1, 1), 200);
+
+  const folder = `keeply/users/${req.user.id}`;
+  const timestamp = Math.round(Date.now() / 1000);
+
+  const signatures = Array.from({ length: total }).map(() => {
+    const publicId = uuidv4();
+    const signature = cloudinary.utils.api_sign_request(
+      { folder, public_id: publicId, timestamp },
+      process.env.api_secret!
+    );
+    return { publicId, folder, timestamp, signature };
+  });
+
+  return res.status(200).json({
+    message: "success",
+    cloudName: process.env.cloud_name,
+    apiKey: process.env.api_key,
+    signatures,
+  });
+};
+
+export const confirmUpload = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const nid = req.user.nid!;
+  const {
+    name,
+    parentId,
+    workspaceId,
+    secureUrl,
+    publicId,
+    resourceType,
+    format,
+    size,
+    mimeType,
+  } = req.body as confirmUploadSchemaType;
+
+  const workspace = await resolveWorkspace(nid, workspaceId);
+  const parent = await resolveParentFolder(parentId, workspace._id);
+
+  const previewUrl = buildPreviewUrl({
+    resource_type: resourceType,
+    public_id: publicId,
+    format,
+    mimeType,
+  });
+
+  const document = await DocumentModel.create({
+    ownerNID: nid,
+    workspaceId: workspace._id,
+    name,
+    type: typeEnum.file,
+    parentId: parent ? parent._id : null,
+    ancestors: parent ? [...parent.ancestors, parent._id] : [],
+    secureUrl,
+    resourceType,
+    mimeType,
+    size,
+    previewUrl,
+  });
+
+  return res.status(201).json({ message: "success", document });
+};
+
+export const confirmFolderUpload = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const nid = req.user.nid!;
+  const { parentId, workspaceId, files } = req.body as confirmFolderUploadSchemaType;
+
+  const workspace = await resolveWorkspace(nid, workspaceId);
+  const rootParent = await resolveParentFolder(parentId, workspace._id);
+
+  type FolderRef = { id: mongoose.Types.ObjectId | null; ancestors: mongoose.Types.ObjectId[] };
+  const folderCache = new Map<string, FolderRef>();
+  folderCache.set("", {
+    id: rootParent ? rootParent._id : null,
+    ancestors: rootParent ? [...rootParent.ancestors, rootParent._id] : [],
+  });
+
+  const ensureFolderPath = async (segments: string[]): Promise<FolderRef> => {
+    let key = "";
+    let current = folderCache.get("")!;
+    for (const seg of segments) {
+      const nextKey = key ? `${key}/${seg}` : seg;
+      let next = folderCache.get(nextKey);
+      if (!next) {
+        let folderDoc = await DocumentModel.findOne({
+          workspaceId: workspace._id,
+          parentId: current.id,
+          name: seg,
+          type: typeEnum.folder,
+          deletedAt: { $exists: false },
+        });
+        if (!folderDoc) {
+          folderDoc = await DocumentModel.create({
+            ownerNID: nid,
+            workspaceId: workspace._id,
+            name: seg,
+            type: typeEnum.folder,
+            parentId: current.id,
+            ancestors: current.ancestors,
+          });
+        }
+        next = { id: folderDoc._id, ancestors: [...current.ancestors, folderDoc._id] };
+        folderCache.set(nextKey, next);
+      }
+      current = next;
+      key = nextKey;
+    }
+    return current;
+  };
+
+  const createdDocuments = [];
+  for (const f of files) {
+    const relativePath = String(f.path || "").replace(/\\/g, "/").replace(/^\/+/, "");
+    const segments = relativePath.split("/").filter(Boolean);
+    const fileName = segments.pop() || "file";
+    const folderInfo = await ensureFolderPath(segments);
+
+    const previewUrl = buildPreviewUrl({
+      resource_type: f.resourceType,
+      public_id: f.publicId,
+      format: f.format,
+      mimeType: f.mimeType,
+    });
+
+    const document = await DocumentModel.create({
+      ownerNID: nid,
+      workspaceId: workspace._id,
+      name: fileName,
+      type: typeEnum.file,
+      parentId: folderInfo.id,
+      ancestors: folderInfo.ancestors,
+      secureUrl: f.secureUrl,
+      resourceType: f.resourceType,
+      mimeType: f.mimeType,
+      size: f.size,
+      previewUrl,
+    });
+
+    createdDocuments.push(document);
+  }
+
+  return res.status(201).json({
+    message: "success",
+    uploaded: createdDocuments.length,
+    documents: createdDocuments,
+  });
 };
